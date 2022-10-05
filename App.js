@@ -1,43 +1,70 @@
-import { StyleSheet, View, FlatList } from "react-native";
+import { StyleSheet, View, FlatList, Button } from "react-native";
 import { useState } from "react";
+import { StatusBar } from "expo-status-bar";
+
 import ToDoActivity from "./components/ToDoActivity";
 import ToDoInput from "./components/ToDoInput";
 
 export default function App() {
+  const [modalIsVisible, setModalIsVisible] = useState(false);
   const [listActivity, setListActivity] = useState([]);
+
+  function startAddListHandler() {
+    setModalIsVisible(true);
+  }
+
+  function endAddListHandler() {
+    setModalIsVisible(false);
+  }
 
   function addListHandler(enteredActivity) {
     setListActivity((currentListActivity) => [
       ...currentListActivity,
       { text: enteredActivity, id: Math.random().toString() },
     ]);
+    endAddListHandler();
   }
 
-  function deleteListHandler() {
-    console.log("Delete");
+  function deleteListHandler(id) {
+    setListActivity((currentListActivity) => {
+      return currentListActivity.filter((list) => list.id !== id);
+    });
   }
 
   return (
-    <View style={styles.container}>
-      <ToDoInput onAddList={addListHandler} />
-      <View style={styles.listContainer}>
-        <FlatList
-          data={listActivity}
-          renderItem={(itemData) => {
-            return (
-              <ToDoActivity
-                text={itemData.item.text}
-                onDeleteItem={deleteListHandler}
-              />
-            );
-          }}
-          keyExtractor={(item, index) => {
-            return item.id;
-          }}
-          alwaysBounceVertical={false}
+    <>
+      <StatusBar style="light"/>
+      <View style={styles.container}>
+        <Button
+          title="Add New List"
+          color="#5e0acc"
+          onPress={startAddListHandler}
         />
+        <ToDoInput
+          visible={modalIsVisible}
+          onAddList={addListHandler}
+          onCancel={endAddListHandler}
+        />
+        <View style={styles.listContainer}>
+          <FlatList
+            data={listActivity}
+            renderItem={(itemData) => {
+              return (
+                <ToDoActivity
+                  text={itemData.item.text}
+                  id={itemData.item.id}
+                  onDeleteItem={deleteListHandler}
+                />
+              );
+            }}
+            keyExtractor={(item, index) => {
+              return item.id;
+            }}
+            alwaysBounceVertical={false}
+          />
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
@@ -46,7 +73,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 50,
     paddingHorizontal: 16,
-    backgroundColor: "#fff",
   },
   listContainer: {
     marginTop: 20,
